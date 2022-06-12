@@ -1,0 +1,52 @@
+#!/bin/bash
+
+echo -n "# of ending pods: "
+read end
+
+echo -n "# of restarting pods: "
+read rest
+
+echo -n "# of endless pods: "
+read inf
+
+#собираем контейнер для процесса 1.0
+docker build -t ushakovstas/test_proc:1.0 --file ./stress_cpu/Dockerfile .
+docker push ushakovstas/test_proc:1.0
+
+#собираем контейнер для процесса 2.0
+docker build -t ushakovstas/test_proc:2.0 --file ./stress_mem/Dockerfile .
+docker push ushakovstas/test_proc:2.0
+
+#собираем контейнер для процесса 1.1
+docker build -t ushakovstas/test_proc:1.1 --file ./stress_cpu_inf/Dockerfile .
+docker push ushakovstas/test_proc:1.1
+
+#собираем контейнер для процесса 2.1
+docker build -t ushakovstas/test_proc:2.1 --file ./stress_mem_inf/Dockerfile .
+docker push ushakovstas/test_proc:2.1
+
+#грузим процессы в кластер
+for ((i = 0 ; i < $end ; i++)); 
+do 
+
+sed "s/{{name}}/end-load-pod-$i/g" ending_proc.yaml | kubectl apply -f - ; 
+
+done
+
+for ((i = 0 ; i < $rest ; i++)); 
+do 
+
+sed "s/{{name}}/rest-load-pod-$i/g" restarting_proc.yaml | kubectl apply -f - ; 
+
+done
+
+for ((i = 0 ; i < $inf ; i++)); 
+do 
+
+sed "s/{{name}}/inf-load-pod-$i/g" endless_proc.yaml | kubectl apply -f - ; 
+
+done
+#выводим статистику по нодам
+#kubectl describe nodes| grep 'Name:\|Allocated' -A 5 | grep 'Name:\|  cpu\|  memory'
+#sleep 16
+#watch -n 2 kubectl top pods

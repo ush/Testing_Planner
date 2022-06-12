@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: {{name}}
+  namespace: default
+spec:
+  restartPolicy: Never
+  containers:
+  - name: cpu-container
+    image: ushakovstas/test_proc:1.0
+  - name: mem-container
+    image: ushakovstas/test_proc:2.0

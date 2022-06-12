@@ -1,0 +1,54 @@
+#!/bin/bash
+echo -n "minikube purge: y/n "
+read purge
+echo -n "# of nodes: "
+read nodes
+#echo -n "container tagname: "
+#read tagname
+
+#готовим minikube
+minikube stop
+if [ $purge = "y" ]; then
+minikube delete --all --purge
+fi
+minikube start --nodes $nodes
+
+#minikube addons enable metrics-server
+
+#kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-np
+
+#minikube service prometheus-server-np
+
+minikube service list
+
+#включаем прометеус для сбора метрик и использования Lens
+kubectl create namespace monitoring
+kubectl config set-context --current --namespace=monitoring
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install prometheus prometheus-community/kube-prometheus-stack
+kubectl get svc -n monitoring
+
+#собираем шедулер кубернетеса
+#sudo env PATH=$PATH make -C ../kubernetes/ all WHAT=cmd/kube-scheduler
+
+#собираем контейнер докера
+#docker build -t ushakovstas/schedulers:$tagname ../kubernetes/
+#docker push ushakovstas/schedulers:$tagname
+
+#будущая работа, ибо это вообще пойдёт отдельным скриптом скорее хз
+#sed -i "s/def_tag/$tagname/" ../kubernetes/custom-scheduler/my-scheduler.yaml
+
+#запуск шедулера
+#kubectl create -f ../kubernetes/custom-scheduler/my-scheduler.yaml
+
+#возвращаем конфиг в прежнее состояние
+#sed -i "s/$tagname/def_tag/" ../kubernetes/custom-scheduler/my-scheduler.yaml
+
+#сделать отсрочку секунд 5
+sleep 5
+kubectl get nodes
+kubectl get pods --namespace=kube-system
+
+kubectl describe nodes| grep 'Name:\|Allocated' -A 5 | grep 'Name:\|  cpu\|  memory'
+

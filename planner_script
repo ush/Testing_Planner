@@ -1,0 +1,19 @@
+#!/bin/bash
+
+pwd
+
+cd planner
+
+pwd
+
+make docker-build IMG=ushakovstas/planner:1.0
+
+make docker-push IMG=ushakovstas/planner:1.0
+
+kubectl apply -f dist
+
+kubectl apply -f config/samples/apps_v4_planner.yaml
+
+kubectl get pods -n planner-system
+
+

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo -n "Insert namespace from which you want to delete all pods: "
+read space
+
+kubectl delete --all pods --namespace=$space
